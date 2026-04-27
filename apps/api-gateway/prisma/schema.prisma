@@ -1,0 +1,134 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Auth ─────────────────────────────────────────────────────────────────────
+model Organisation {
+  id              String    @id @default(uuid())
+  name            String
+  slug            String    @unique
+  widgetColor     String    @default("#6366f1")
+  widgetGreeting  String    @default("Hi! How can I help you today?")
+  plan            Plan      @default(FREE)
+  apiKey          String    @unique @default(uuid())
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  users           User[]
+  documents       KnowledgeDocument[]
+  conversations   Conversation[]
+
+  @@map("organisations")
+}
+
+model User {
+  id          String    @id @default(uuid())
+  email       String    @unique
+  name        String
+  password    String
+  role        UserRole  @default(MEMBER)
+  orgId       String
+  org         Organisation @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("users")
+}
+
+// ─── Knowledge Base ────────────────────────────────────────────────────────────
+model KnowledgeDocument {
+  id            String          @id @default(uuid())
+  orgId         String
+  org           Organisation    @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  name          String
+  type          DocumentType
+  status        DocumentStatus  @default(PENDING)
+  storageKey    String?
+  sourceUrl     String?
+  fileSize      Int?
+  chunkCount    Int?
+  errorMessage  String?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  @@map("knowledge_documents")
+}
+
+// ─── Conversations ────────────────────────────────────────────────────────────
+model Conversation {
+  id             String               @id @default(uuid())
+  orgId          String
+  org            Organisation         @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  sessionId      String
+  status         ConversationStatus   @default(OPEN)
+  visitorEmail   String?
+  escalatedAt    DateTime?
+  resolvedAt     DateTime?
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+
+  messages       Message[]
+
+  @@index([orgId, createdAt])
+  @@map("conversations")
+}
+
+model Message {
+  id              String       @id @default(uuid())
+  conversationId  String
+  conversation    Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  role            MessageRole
+  content         String       @db.Text
+  sources         Json?
+  confidence      Float?
+  createdAt       DateTime     @default(now())
+
+  @@index([conversationId])
+  @@map("messages")
+}
+
+// ─── Enums ────────────────────────────────────────────────────────────────────
+enum Plan {
+  FREE
+  STARTER
+  PRO
+  ENTERPRISE
+}
+
+enum UserRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+enum DocumentType {
+  PDF
+  TXT
+  URL
+  DOCX
+  MARKDOWN
+}
+
+enum DocumentStatus {
+  PENDING
+  PROCESSING
+  READY
+  FAILED
+}
+
+enum ConversationStatus {
+  OPEN
+  RESOLVED
+  ESCALATED
+}
+
+enum MessageRole {
+  USER
+  ASSISTANT
+  SYSTEM
+}
