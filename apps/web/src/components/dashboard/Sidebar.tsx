@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
+import { ThemeToggle } from "@/components/providers/ThemeToggle";
 import {
   Bot,
   LayoutDashboard,
@@ -84,7 +85,7 @@ export function Sidebar() {
       )}
 
       {/* User info */}
-      <div className="border-t border-border p-3">
+      <div className="border-t border-border p-3 space-y-3">
         <div className="flex items-center gap-3 px-2 py-1.5 rounded-md hover:bg-muted transition-colors">
           <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
             <span className="text-xs font-semibold text-primary">
@@ -102,6 +103,12 @@ export function Sidebar() {
           >
             <LogOut className="w-4 h-4" />
           </button>
+        </div>
+        
+        {/* Theme toggle */}
+        <div className="flex items-center justify-between px-2">
+          <span className="text-xs text-muted-foreground font-medium">Theme</span>
+          <ThemeToggle />
         </div>
       </div>
     </aside>
