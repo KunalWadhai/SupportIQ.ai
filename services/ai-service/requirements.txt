@@ -12,9 +12,9 @@ langchain-qdrant==0.1.1
 # Document loaders
 pypdf==4.2.0
 python-docx==1.1.2
-unstructured==0.13.7
-requests==2.31.0
-beautifulsoup4==4.12.3
+unstructured==0.22.23
+requests==2.32.5
+beautifulsoup4==4.14.3
 
 # Vector store
 qdrant-client==1.9.1
