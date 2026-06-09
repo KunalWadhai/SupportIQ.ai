@@ -21,7 +21,6 @@ router.post("/widget", requireWidgetKey, async (req, res) => {
     const body = ChatSchema.parse(req.body);
     const orgId = req.orgId!;
 
-    // Find or create conversation
     let conversation = body.conversationId
       ? await prisma.conversation.findFirst({
           where: { id: body.conversationId, orgId },
@@ -41,13 +40,11 @@ router.post("/widget", requireWidgetKey, async (req, res) => {
       });
     }
 
-    // Build conversation history for context
     const history = conversation.messages.map((m) => ({
       role: m.role.toLowerCase(),
       content: m.content,
     }));
 
-    // Save user message
     const userMsg = await prisma.message.create({
       data: {
         conversationId: conversation.id,

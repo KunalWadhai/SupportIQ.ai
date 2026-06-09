@@ -1,11 +1,3 @@
-/**
- * Auth routes integration tests
- * Run with: npm test (from apps/api-gateway)
- *
- * Uses a real test database — set TEST_DATABASE_URL in env.
- * Mocks external deps (MinIO, AI service, BullMQ) to stay fast.
- */
-
 import express from "express";
 import request from "supertest";
 import { jest } from "@jest/globals";

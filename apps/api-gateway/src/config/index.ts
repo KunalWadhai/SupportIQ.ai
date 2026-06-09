@@ -1,32 +1,32 @@
 export const config = {
-  port: parseInt(process.env.PORT || "3001", 10),
+  port: parseInt(process.env.PORT || "3001"),
   nodeEnv: process.env.NODE_ENV || "development",
 
   jwt: {
-    secret: process.env.JWT_SECRET || "fallback-secret-change-in-production",
+    secret: process.env.JWT_SECRET,
     expiresIn: "7d",
   },
 
   redis: {
-    url: process.env.REDIS_URL || "redis://localhost:6379",
+    url: process.env.REDIS_URL,
   },
 
   aiService: {
-    url: process.env.AI_SERVICE_URL || "http://localhost:8000",
+    url: process.env.AI_SERVICE_URL,
   },
 
   minio: {
-    endpoint: process.env.MINIO_ENDPOINT || "localhost",
-    port: parseInt(process.env.MINIO_PORT || "9000", 10),
+    endpoint: process.env.MINIO_ENDPOINT,
+    port: parseInt(process.env.MINIO_PORT || "9000"),
     useSSL: process.env.MINIO_USE_SSL === "true",
-    accessKey: process.env.MINIO_ACCESS_KEY || "supportiq_minio",
-    secretKey: process.env.MINIO_SECRET_KEY || "supportiq_minio_secret",
-    bucket: process.env.MINIO_BUCKET || "supportiq-docs",
+    accessKey: process.env.MINIO_ACCESS_KEY,
+    secretKey: process.env.MINIO_SECRET_KEY,
+    bucket: process.env.MINIO_BUCKET,
   },
 
   rateLimit: {
-    windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || "60000", 10),
-    max: parseInt(process.env.RATE_LIMIT_MAX || "100", 10),
+    windowMs: process.env.RATE_LIMIT_WINDOW_MS,
+    max: process.env.RATE_LIMIT_MAX,
   },
 
   queues: {
