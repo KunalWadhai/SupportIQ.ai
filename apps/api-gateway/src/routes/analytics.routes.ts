@@ -5,7 +5,6 @@ import { requireAuth } from "../middleware/auth";
 const router = Router();
 router.use(requireAuth);
 
-// ─── Overview stats ────────────────────────────────────────────────────────────
 router.get("/overview", async (req, res) => {
   try {
     const orgId = req.orgId!;
@@ -19,7 +18,6 @@ router.get("/overview", async (req, res) => {
       prisma.message.count({ where: { conversation: { orgId }, createdAt: { gte: since } } }),
     ]);
 
-    // Conversations by day (last N days)
     const conversationsByDay = await prisma.$queryRaw<Array<{ date: string; count: bigint }>>`
       SELECT DATE(created_at)::text as date, COUNT(*)::bigint as count
       FROM conversations
@@ -29,7 +27,6 @@ router.get("/overview", async (req, res) => {
       ORDER BY date ASC
     `;
 
-    // Average confidence from assistant messages
     const avgConfidenceResult = await prisma.message.aggregate({
       where: {
         role: "ASSISTANT",
@@ -40,7 +37,6 @@ router.get("/overview", async (req, res) => {
       _avg: { confidence: true },
     });
 
-    // Top questions (first user message per conversation)
     const firstMessages = await prisma.message.findMany({
       where: {
         role: "USER",
@@ -89,7 +85,6 @@ router.get("/overview", async (req, res) => {
   }
 });
 
-// ─── Document stats ───────────────────────────────────────────────────────────
 router.get("/knowledge", async (req, res) => {
   try {
     const orgId = req.orgId!;

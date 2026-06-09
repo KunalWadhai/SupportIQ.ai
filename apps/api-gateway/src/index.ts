@@ -1,3 +1,4 @@
+import "./env";
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
@@ -35,11 +36,9 @@ app.use(
   })
 );
 
-// ─── Body Parsing ─────────────────────────────────────────────────────────────
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
-// ─── Rate Limiting ────────────────────────────────────────────────────────────
 const limiter = rateLimit({
   windowMs: config.rateLimit.windowMs,
   max: config.rateLimit.max,
@@ -58,19 +57,16 @@ const widgetLimiter = rateLimit({
 app.use(limiter);
 app.use("/api/chat/widget", widgetLimiter);
 
-// ─── Routes ───────────────────────────────────────────────────────────────────
 app.use("/api/auth", authRouter);
 app.use("/api/knowledge", knowledgeRouter);
 app.use("/api/chat", chatRouter);
 app.use("/api/analytics", analyticsRouter);
 app.use("/api/widget", widgetRouter);
 
-// ─── Health ───────────────────────────────────────────────────────────────────
 app.get("/health", (_, res) => {
   res.json({ status: "ok", version: "1.0.0", timestamp: new Date().toISOString() });
 });
 
-// ─── 404 ──────────────────────────────────────────────────────────────────────
 app.use((req, res) => {
   res.status(404).json({ success: false, error: `Route ${req.path} not found` });
 });

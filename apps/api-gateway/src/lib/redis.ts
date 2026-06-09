@@ -1,7 +1,6 @@
 import IORedis from "ioredis";
 import { config } from "../config";
 
-// Singleton Redis client — used by BullMQ workers and any caching needs
 let _redis: IORedis | null = null;
 
 export function getRedis(): IORedis {
@@ -19,7 +18,6 @@ export function getRedis(): IORedis {
   return _redis;
 }
 
-// Lightweight cache helpers
 export async function cacheGet<T>(key: string): Promise<T | null> {
   const raw = await getRedis().get(key);
   if (!raw) return null;

@@ -8,7 +8,6 @@ import { requireAuth } from "../middleware/auth";
 
 const router = Router();
 
-// ─── Register ─────────────────────────────────────────────────────────────────
 const RegisterSchema = z.object({
   name: z.string().min(2).max(100),
   email: z.string().email(),
@@ -72,7 +71,7 @@ router.post("/register", async (req, res) => {
   }
 });
 
-// ─── Login ─────────────────────────────────────────────────────────────────────
+
 const LoginSchema = z.object({
   email: z.string().email(),
   password: z.string().min(1),
@@ -113,7 +112,6 @@ router.post("/login", async (req, res) => {
   }
 });
 
-// ─── Me ───────────────────────────────────────────────────────────────────────
 router.get("/me", requireAuth, async (req, res) => {
   try {
     const user = await prisma.user.findUnique({
