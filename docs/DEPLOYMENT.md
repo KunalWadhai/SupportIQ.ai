@@ -38,7 +38,7 @@ Set `AI_SERVICE_URL` on Render to your **Lambda Function URL** (from AWS SAM out
    - **Runtime:** Node
    - **Build command:**
      ```bash
-     npm ci && npx prisma generate --schema=apps/api-gateway/prisma/schema.prisma && npm run build --workspace=apps/api-gateway
+     npm ci --include=dev && npx prisma generate --schema=apps/api-gateway/prisma/schema.prisma && npm run build --workspace=apps/api-gateway
      ```
    - **Start command:**
      ```bash

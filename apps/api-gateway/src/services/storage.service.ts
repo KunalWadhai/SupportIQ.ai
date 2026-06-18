@@ -26,9 +26,9 @@ const MINIO_BUCKET = config.minio.bucket;
 function createS3Client(): S3Client {
   return new S3Client({
     region: config.s3.region,
-    credentials: {
-      accessKeyId: config.s3.accessKeyId,
-      secretAccessKey: config.s3.secretAccessKey,
+      credentials: {
+        accessKeyId: config.s3.accessKeyId || "",
+        secretAccessKey: config.s3.secretAccessKey || "",
     },
   });
 }
