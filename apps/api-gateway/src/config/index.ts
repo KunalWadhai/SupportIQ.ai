@@ -7,6 +7,16 @@ function resolveJwtSecret(): string {
   return "dev-only-jwt-secret-not-for-production-use";
 }
 
+function resolveStorageProvider(): "minio" | "s3" {
+  const explicit = process.env.STORAGE_PROVIDER?.toLowerCase();
+  if (explicit === "s3" || explicit === "minio") return explicit;
+  // Auto: production → S3 when bucket is configured, otherwise MinIO
+  if (process.env.NODE_ENV === "production" && process.env.AWS_S3_BUCKET) {
+    return "s3";
+  }
+  return "minio";
+}
+
 export const config = {
   port: parseInt(process.env.PORT || "3001", 10),
   nodeEnv: process.env.NODE_ENV || "development",
@@ -24,6 +34,10 @@ export const config = {
     url: process.env.AI_SERVICE_URL || "http://localhost:8000",
   },
 
+  storage: {
+    provider: resolveStorageProvider(),
+  },
+
   minio: {
     endpoint: process.env.MINIO_ENDPOINT || "localhost",
     port: parseInt(process.env.MINIO_PORT || "9000", 10),
@@ -31,6 +45,13 @@ export const config = {
     accessKey: process.env.MINIO_ACCESS_KEY || "supportiq_minio",
     secretKey: process.env.MINIO_SECRET_KEY || "supportiq_minio_secret",
     bucket: process.env.MINIO_BUCKET || "supportiq-docs",
+  },
+
+  s3: {
+    region: process.env.AWS_REGION,
+    bucket: process.env.AWS_S3_BUCKET,
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
   },
 
   rateLimit: {

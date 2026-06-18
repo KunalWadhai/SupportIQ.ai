@@ -25,6 +25,8 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
+      - key: STORAGE_PROVIDER
+        value: s3
       - key: PORT
         value: 3001
       - key: DATABASE_URL
@@ -52,6 +54,14 @@ services:
       - key: MINIO_SECRET_KEY
         sync: false
       - key: MINIO_BUCKET
+        sync: false
+      - key: AWS_ACCESS_KEY_ID
+        sync: false
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false
+      - key: AWS_REGION
+        sync: false
+      - key: AWS_S3_BUCKET
         sync: false
       - key: ALLOWED_ORIGINS
         sync: false

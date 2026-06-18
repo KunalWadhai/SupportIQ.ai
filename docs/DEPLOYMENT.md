@@ -210,7 +210,7 @@ After deploy, note the outputs:
 | Variable | `AWS_REGION` | `ap-south-2` |
 | Variable | `AWS_ECR_REPOSITORY` | `123456789.dkr.ecr.ap-south-2.amazonaws.com/supportiq-ai-service-staging` |
 | Variable | `AWS_LAMBDA_FUNCTION_NAME` | `supportiq-ai-service-staging` |
-| Variable | `AI_SERVICE_URL` | Lambda Function URL (for Render env) |
+| Variable | `AI_SERVICE_URL` | Lambda Function URL or API Gateway endpoint (for Render env) |
 | Variable | `QDRANT_URL` | Qdrant cluster URL |
 
 ### How CI deploys
