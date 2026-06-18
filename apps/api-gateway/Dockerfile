@@ -1,5 +1,6 @@
 FROM node:20-alpine AS base
 WORKDIR /app
+RUN apk add --no-cache openssl libc6-compat
 RUN corepack enable
 
 FROM base AS deps
@@ -11,6 +12,7 @@ RUN npm install
 FROM base AS builder
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+RUN npx prisma generate --schema=apps/api-gateway/prisma/schema.prisma
 RUN npm run build --workspace=apps/api-gateway
 
 FROM base AS runner
@@ -25,4 +27,4 @@ COPY --from=builder /app/apps/api-gateway/package.json ./
 RUN npx prisma generate
 
 EXPOSE 3001
-CMD ["node", "dist/index.js"]
+CMD ["sh", "-c", "npx prisma migrate deploy && node dist/index.js"]

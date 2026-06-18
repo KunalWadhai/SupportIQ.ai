@@ -47,9 +47,7 @@ export async function requireWidgetKey(
   next: NextFunction
 ) {
   try {
-    const apiKey =
-      req.headers["x-api-key"] ||
-      (req.query.apiKey as string);
+    const apiKey = req.headers["x-api-key"];
 
     if (!apiKey) {
       return res.status(401).json({ success: false, error: "API key required" });

@@ -12,9 +12,11 @@
     "build": "turbo run build",
     "lint": "turbo run lint",
     "type-check": "turbo run type-check",
-    "docker:up": "docker-compose up -d",
-    "docker:down": "docker-compose down",
-    "db:migrate": "cd apps/api-gateway && npx prisma migrate dev",
+    "test": "npm test --workspace=apps/api-gateway",
+    "docker:up": "docker compose up -d --build",
+    "docker:down": "docker compose down",
+    "db:migrate": "cd apps/api-gateway && npx prisma migrate deploy",
+    "db:seed": "cd apps/api-gateway && npm run db:seed",
     "db:studio": "cd apps/api-gateway && npx prisma studio"
   },
   "devDependencies": {
@@ -25,5 +27,6 @@
   "engines": {
     "node": ">=20.0.0",
     "npm": ">=10.0.0"
-  }
+  },
+  "packageManager": "npm@10.9.2"
 }

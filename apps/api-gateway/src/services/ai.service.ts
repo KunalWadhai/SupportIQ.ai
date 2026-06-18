@@ -32,7 +32,7 @@ export async function queryRAG(params: {
     throw new Error(`AI service error: ${err}`);
   }
 
-  return res.json();
+  return (await res.json()) as RAGQueryResult;
 }
 
 // ─── Streaming RAG Query ───────────────────────────────────────────────────────
@@ -74,7 +74,7 @@ export async function ingestDocument(params: {
     throw new Error(`Ingestion error: ${err}`);
   }
 
-  return res.json();
+  return (await res.json()) as IngestResult;
 }
 
 // ─── Delete document vectors ───────────────────────────────────────────────────

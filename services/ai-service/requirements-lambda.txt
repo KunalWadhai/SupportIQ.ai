@@ -1,0 +1,4 @@
+# Lambda runtime dependencies (container image).
+# Install on top of AWS Lambda Python 3.11 base image.
+-r requirements.txt
+mangum>=0.17.0,<0.19.0

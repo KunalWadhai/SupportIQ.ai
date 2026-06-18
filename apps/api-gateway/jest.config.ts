@@ -15,6 +15,7 @@ const config: Config = {
     "src/**/*.ts",
     "!src/**/*.d.ts",
     "!src/index.ts",
+    "!src/load-env.ts",
   ],
   coverageDirectory: "coverage",
   coverageReporters: ["text", "lcov"],

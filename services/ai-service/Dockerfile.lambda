@@ -1,0 +1,23 @@
+# AWS Lambda container image for SupportIQ AI Service
+# Build: docker build -f Dockerfile.lambda -t supportiq-ai-lambda .
+# Requires: Linux/x86_64 (Lambda default architecture)
+
+FROM public.ecr.aws/lambda/python:3.11
+
+# System libraries for pypdf, unstructured, poppler
+RUN yum install -y \
+    gcc \
+    gcc-c++ \
+    libmagic \
+    poppler-utils \
+    && yum clean all
+
+COPY requirements-lambda.txt ${LAMBDA_TASK_ROOT}/
+COPY requirements.txt ${LAMBDA_TASK_ROOT}/
+
+RUN pip install --no-cache-dir -r requirements-lambda.txt
+
+COPY app/ ${LAMBDA_TASK_ROOT}/app/
+COPY lambda_handler.py ${LAMBDA_TASK_ROOT}/
+
+CMD ["lambda_handler.handler"]

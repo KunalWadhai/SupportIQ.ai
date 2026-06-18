@@ -1,9 +1,18 @@
+function resolveJwtSecret(): string {
+  const secret = process.env.JWT_SECRET;
+  if (secret) return secret;
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("JWT_SECRET environment variable is required in production");
+  }
+  return "dev-only-jwt-secret-not-for-production-use";
+}
+
 export const config = {
   port: parseInt(process.env.PORT || "3001", 10),
   nodeEnv: process.env.NODE_ENV || "development",
 
   jwt: {
-    secret: process.env.JWT_SECRET || "fallback-secret-change-in-production",
+    secret: resolveJwtSecret(),
     expiresIn: "7d",
   },
 

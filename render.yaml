@@ -1,0 +1,61 @@
+# Render Blueprint — API Gateway
+# Docs: https://render.com/docs/blueprint-spec
+#
+# One-time setup:
+#   1. Connect this repo in Render Dashboard
+#   2. Apply blueprint OR create Web Service manually with settings below
+#   3. Set env vars in Render Dashboard (mirror GitHub Secrets/Variables)
+#   4. Copy Deploy Hook URL → GitHub Secret: RENDER_DEPLOY_HOOK_URL
+
+services:
+  - type: web
+    name: supportiq-api-gateway
+    runtime: node
+    region: oregon
+    plan: starter
+    branch: develop
+    buildCommand: >-
+      npm ci &&
+      npx prisma generate --schema=apps/api-gateway/prisma/schema.prisma &&
+      npm run build --workspace=apps/api-gateway
+    startCommand: >-
+      npx prisma migrate deploy --schema=apps/api-gateway/prisma/schema.prisma &&
+      node apps/api-gateway/dist/index.js
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3001
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: AI_SERVICE_URL
+        sync: false
+      - key: QDRANT_URL
+        sync: false
+      - key: QDRANT_API_KEY
+        sync: false
+      - key: MINIO_ENDPOINT
+        sync: false
+      - key: MINIO_PORT
+        sync: false
+      - key: MINIO_USE_SSL
+        sync: false
+      - key: MINIO_ACCESS_KEY
+        sync: false
+      - key: MINIO_SECRET_KEY
+        sync: false
+      - key: MINIO_BUCKET
+        sync: false
+      - key: ALLOWED_ORIGINS
+        sync: false
+      - key: RATE_LIMIT_WINDOW_MS
+        value: 60000
+      - key: RATE_LIMIT_MAX
+        value: 100
