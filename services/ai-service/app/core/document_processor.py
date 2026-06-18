@@ -7,9 +7,9 @@ from pathlib import Path
 from langchain_core.documents import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import (
+    Docx2txtLoader,
     PyPDFLoader,
     TextLoader,
-    UnstructuredWordDocumentLoader,
     WebBaseLoader,
 )
 from app.config import get_settings
@@ -67,7 +67,7 @@ def load_and_chunk(
 
         elif doc_type == "DOCX":
             tmp_path = _download_to_temp(file_url, ".docx")
-            loader = UnstructuredWordDocumentLoader(tmp_path)
+            loader = Docx2txtLoader(tmp_path)
             raw_docs = loader.load()
 
         elif doc_type in ("TXT", "MARKDOWN"):
