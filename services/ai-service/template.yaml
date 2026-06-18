@@ -1,0 +1,77 @@
+# AWS SAM — one-time infrastructure for AI Service on Lambda (container)
+#
+# Prerequisites:
+#   - AWS CLI + SAM CLI installed locally
+#   - Docker running
+#   - ECR repository created (or let SAM create it)
+#
+# First deploy (creates Lambda + Function URL + IAM):
+#   cd services/ai-service
+#   sam build --use-container -t template.yaml
+#   sam deploy --guided
+#
+# After deploy, copy FunctionUrl from outputs → GitHub Variable: AI_SERVICE_URL
+# Copy ECR URI → GitHub Variable: AWS_ECR_REPOSITORY
+
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: SupportIQ AI Service — FastAPI on Lambda (container image)
+
+Parameters:
+  Stage:
+    Type: String
+    Default: staging
+  OpenAIApiKey:
+    Type: String
+    NoEcho: true
+  QdrantUrl:
+    Type: String
+  QdrantApiKey:
+    Type: String
+    NoEcho: true
+  RedisUrl:
+    Type: String
+    Default: ""
+
+Globals:
+  Function:
+    Timeout: 300
+    MemorySize: 2048
+    Architectures:
+      - x86_64
+
+Resources:
+  AiServiceFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub supportiq-ai-service-${Stage}
+      PackageType: Image
+      ImageConfig:
+        Command:
+          - lambda_handler.handler
+      Environment:
+        Variables:
+          OPENAI_API_KEY: !Ref OpenAIApiKey
+          QDRANT_URL: !Ref QdrantUrl
+          QDRANT_API_KEY: !Ref QdrantApiKey
+          REDIS_URL: !Ref RedisUrl
+      FunctionUrlConfig:
+        AuthType: NONE
+        InvokeMode: RESPONSE_STREAM
+      Policies:
+        - AWSLambdaBasicExecutionRole
+    Metadata:
+      DockerTag: latest
+      DockerContext: .
+      Dockerfile: Dockerfile.lambda
+
+Outputs:
+  FunctionUrl:
+    Description: Set as AI_SERVICE_URL in api-gateway (Render) and GitHub Variables
+    Value: !GetAtt AiServiceFunctionUrl.FunctionUrl
+  FunctionName:
+    Description: Set as AWS_LAMBDA_FUNCTION_NAME in GitHub Variables
+    Value: !Ref AiServiceFunction
+  EcrRepositoryUri:
+    Description: Set as AWS_ECR_REPOSITORY in GitHub Variables (image repo without tag)
+    Value: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/supportiq-ai-service-${Stage}

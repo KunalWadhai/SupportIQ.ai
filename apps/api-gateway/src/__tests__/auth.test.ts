@@ -8,7 +8,6 @@
 
 import express from "express";
 import request from "supertest";
-import { jest } from "@jest/globals";
 
 // ── Mock external services before importing routes ─────────────────────────
 jest.mock("../lib/prisma", () => ({
@@ -26,13 +25,13 @@ jest.mock("../lib/prisma", () => ({
 }));
 
 jest.mock("bcryptjs", () => ({
-  hash: jest.fn().mockResolvedValue("hashed_password"),
-  compare: jest.fn().mockResolvedValue(true),
+  hash: jest.fn(() => Promise.resolve("hashed_password")),
+  compare: jest.fn(() => Promise.resolve(true)),
 }));
 
 jest.mock("jsonwebtoken", () => ({
-  sign: jest.fn().mockReturnValue("mock.jwt.token"),
-  verify: jest.fn().mockReturnValue({ userId: "user-1", orgId: "org-1", role: "OWNER" }),
+  sign: jest.fn(() => "mock.jwt.token"),
+  verify: jest.fn(() => ({ userId: "user-1", orgId: "org-1", role: "OWNER" })),
 }));
 
 // ── Import after mocks ──────────────────────────────────────────────────────

@@ -10,6 +10,54 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# ─── Shared config from GitHub Actions Variables (Settings → Secrets and variables → Actions → Variables)
+# Non-secret values — set these in your repository or environment:
+#   CI_POSTGRES_USER, CI_POSTGRES_DB, CI_REDIS_URL
+#   NEXT_PUBLIC_API_URL, NEXT_PUBLIC_APP_URL, AI_SERVICE_URL, API_INTERNAL_URL
+#   QDRANT_URL, MINIO_ENDPOINT, MINIO_PORT, MINIO_USE_SSL, MINIO_BUCKET
+#   NEXTAUTH_URL, ALLOWED_ORIGINS, NODE_ENV, AWS_REGION, AWS_S3_BUCKET
+#   RATE_LIMIT_WINDOW_MS, RATE_LIMIT_MAX
+#
+# ─── Secrets (Settings → Secrets and variables → Actions → Secrets):
+#   OPENAI_API_KEY, JWT_SECRET, NEXTAUTH_SECRET
+#   DATABASE_URL, REDIS_URL, QDRANT_API_KEY
+#   MINIO_ACCESS_KEY, MINIO_SECRET_KEY
+#   RENDER_DEPLOY_HOOK_URL, VERCEL_TOKEN
+#   AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY
+#   CI_POSTGRES_PASSWORD, CODECOV_TOKEN
+#
+# ─── Deploy Variables:
+#   VERCEL_ORG_ID, VERCEL_PROJECT_ID
+#   AWS_ECR_REPOSITORY, AWS_LAMBDA_FUNCTION_NAME
+
+env:
+  # CI ephemeral service credentials (override via repo Variables / Secrets)
+  CI_POSTGRES_USER: ${{ vars.CI_POSTGRES_USER }}
+  CI_POSTGRES_DB: ${{ vars.CI_POSTGRES_DB }}
+  CI_REDIS_URL: ${{ vars.CI_REDIS_URL }}
+
+  # Application URLs (Variables)
+  NEXT_PUBLIC_API_URL: ${{ vars.NEXT_PUBLIC_API_URL }}
+  NEXT_PUBLIC_APP_URL: ${{ vars.NEXT_PUBLIC_APP_URL }}
+  AI_SERVICE_URL: ${{ vars.AI_SERVICE_URL }}
+  API_INTERNAL_URL: ${{ vars.API_INTERNAL_URL }}
+  NEXTAUTH_URL: ${{ vars.NEXTAUTH_URL }}
+  QDRANT_URL: ${{ vars.QDRANT_URL }}
+
+  # Storage (Variables + Secrets)
+  MINIO_ENDPOINT: ${{ vars.MINIO_ENDPOINT }}
+  MINIO_PORT: ${{ vars.MINIO_PORT }}
+  MINIO_USE_SSL: ${{ vars.MINIO_USE_SSL }}
+  MINIO_BUCKET: ${{ vars.MINIO_BUCKET }}
+
+  # App config (Variables)
+  NODE_ENV: ${{ vars.NODE_ENV }}
+  ALLOWED_ORIGINS: ${{ vars.ALLOWED_ORIGINS }}
+  RATE_LIMIT_WINDOW_MS: ${{ vars.RATE_LIMIT_WINDOW_MS }}
+  RATE_LIMIT_MAX: ${{ vars.RATE_LIMIT_MAX }}
+  AWS_REGION: ${{ vars.AWS_REGION }}
+  AWS_S3_BUCKET: ${{ vars.AWS_S3_BUCKET }}
+
 jobs:
   # ─── Node.js lint + type-check + test ──────────────────────────────────────
   node-ci:
@@ -21,9 +69,9 @@ jobs:
       postgres:
         image: postgres:16-alpine
         env:
-          POSTGRES_USER: supportiq
-          POSTGRES_PASSWORD: test_password
-          POSTGRES_DB: supportiq_test
+          POSTGRES_USER: ${{ vars.CI_POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.CI_POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ vars.CI_POSTGRES_DB }}
         ports:
           - 5432:5432
         options: >-
@@ -43,19 +91,40 @@ jobs:
           --health-retries 5
 
     env:
-      DATABASE_URL: postgresql://supportiq:test_password@localhost:5432/supportiq_test
-      REDIS_URL: redis://localhost:6379
-      JWT_SECRET: test-jwt-secret-for-ci-at-least-32-chars
-      OPENAI_API_KEY: sk-test-fake-key
-      AI_SERVICE_URL: http://localhost:8000
-      MINIO_ENDPOINT: localhost
-      MINIO_PORT: 9000
-      MINIO_ACCESS_KEY: test
-      MINIO_SECRET_KEY: testtest
+      DATABASE_URL: postgresql://${{ vars.CI_POSTGRES_USER }}:${{ secrets.CI_POSTGRES_PASSWORD }}@localhost:5432/${{ vars.CI_POSTGRES_DB }}
+      REDIS_URL: ${{ vars.CI_REDIS_URL }}
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      CI_POSTGRES_PASSWORD: ${{ secrets.CI_POSTGRES_PASSWORD }}
+      AI_SERVICE_URL: ${{ vars.AI_SERVICE_URL }}
+      MINIO_ENDPOINT: ${{ vars.MINIO_ENDPOINT }}
+      MINIO_PORT: ${{ vars.MINIO_PORT }}
+      MINIO_USE_SSL: ${{ vars.MINIO_USE_SSL }}
+      MINIO_ACCESS_KEY: ${{ secrets.MINIO_ACCESS_KEY }}
+      MINIO_SECRET_KEY: ${{ secrets.MINIO_SECRET_KEY }}
+      MINIO_BUCKET: ${{ vars.MINIO_BUCKET }}
+      QDRANT_URL: ${{ vars.QDRANT_URL }}
+      QDRANT_API_KEY: ${{ secrets.QDRANT_API_KEY }}
+      NODE_ENV: test
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Validate required CI configuration
+        run: |
+          missing=0
+          check_var() { [ -z "${!1}" ] && echo "❌ Missing variable: $1" && missing=1; }
+          check_secret() { [ -z "${!1}" ] && echo "❌ Missing secret: $1" && missing=1; }
+          check_var CI_POSTGRES_USER
+          check_var CI_POSTGRES_DB
+          check_var CI_REDIS_URL
+          check_secret CI_POSTGRES_PASSWORD
+          check_secret JWT_SECRET
+          check_secret OPENAI_API_KEY
+          check_secret MINIO_ACCESS_KEY
+          check_secret MINIO_SECRET_KEY
+          [ "$missing" -eq 0 ] || exit 1
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -76,7 +145,7 @@ jobs:
         run: npx prisma generate --schema=apps/api-gateway/prisma/schema.prisma
 
       - name: Run database migrations
-        run: npx prisma db push --schema=apps/api-gateway/prisma/schema.prisma --force-reset
+        run: npx prisma migrate deploy --schema=apps/api-gateway/prisma/schema.prisma
 
       - name: Run API Gateway tests
         run: npm test --workspace=apps/api-gateway
@@ -84,6 +153,7 @@ jobs:
       - name: Upload coverage
         uses: codecov/codecov-action@v4
         with:
+          token: ${{ secrets.CODECOV_TOKEN }}
           directory: apps/api-gateway/coverage
           flags: api-gateway
         continue-on-error: true
@@ -98,14 +168,28 @@ jobs:
       run:
         working-directory: services/ai-service
 
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      QDRANT_URL: ${{ vars.QDRANT_URL }}
+      QDRANT_API_KEY: ${{ secrets.QDRANT_API_KEY }}
+      REDIS_URL: ${{ vars.CI_REDIS_URL }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Validate required CI configuration
+        run: |
+          missing=0
+          [ -z "$OPENAI_API_KEY" ] && echo "❌ Missing secret: OPENAI_API_KEY" && missing=1
+          [ -z "$QDRANT_URL" ] && echo "❌ Missing variable: QDRANT_URL" && missing=1
+          [ -z "$REDIS_URL" ] && echo "❌ Missing variable: CI_REDIS_URL" && missing=1
+          [ "$missing" -eq 0 ] || exit 1
+
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: "3.11"
           cache: "pip"
           cache-dependency-path: services/ai-service/requirements.txt
 
@@ -123,13 +207,9 @@ jobs:
         run: |
           pip install mypy types-requests
           mypy app/ --ignore-missing-imports --no-strict-optional
-        continue-on-error: true  # mypy warnings don't block CI
+        continue-on-error: true
 
       - name: Run tests
-        env:
-          OPENAI_API_KEY: sk-test-fake-key
-          QDRANT_URL: http://localhost:6333
-          REDIS_URL: redis://localhost:6379
         run: pytest tests/ -v --tb=short
 
   # ─── Docker build check ────────────────────────────────────────────────────
@@ -168,25 +248,162 @@ jobs:
           cache-from: type=gha,scope=${{ matrix.service.name }}
           cache-to: type=gha,mode=max,scope=${{ matrix.service.name }}
           build-args: |
-            NEXT_PUBLIC_API_URL=http://localhost:3001
+            NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL }}
+            NEXT_PUBLIC_APP_URL=${{ vars.NEXT_PUBLIC_APP_URL }}
 
-  # ─── Deploy to staging (main branch only) ─────────────────────────────────
-  deploy-staging:
-    name: Deploy to staging
+  # ─── Deploy API Gateway → Render (develop branch only) ───────────────────────
+  deploy-api-gateway:
+    name: Deploy api-gateway → Render
     runs-on: ubuntu-latest
     needs: [docker-build]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
     environment: staging
+
+    steps:
+      - name: Validate Render deploy hook
+        run: |
+          if [ -z "${{ secrets.RENDER_DEPLOY_HOOK_URL }}" ]; then
+            echo "❌ Missing secret: RENDER_DEPLOY_HOOK_URL"
+            echo "   Render Dashboard → your api-gateway service → Settings → Deploy Hook"
+            exit 1
+          fi
+
+      - name: Trigger Render deploy
+        run: |
+          echo "🚀 Triggering Render deploy for api-gateway..."
+          curl --fail --silent --show-error --request POST \
+            "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
+          echo "✅ Render deploy triggered — check Render Dashboard for build logs"
+
+  # ─── Deploy Web → Vercel (develop branch only) ─────────────────────────────
+  deploy-web:
+    name: Deploy web → Vercel
+    runs-on: ubuntu-latest
+    needs: [docker-build]
+    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
+    environment: staging
+
+    env:
+      VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+      NEXT_PUBLIC_API_URL: ${{ vars.NEXT_PUBLIC_API_URL }}
+      NEXT_PUBLIC_APP_URL: ${{ vars.NEXT_PUBLIC_APP_URL }}
+      API_INTERNAL_URL: ${{ vars.API_INTERNAL_URL }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Deploy
+      - name: Validate Vercel configuration
         run: |
-          echo "🚀 Deploy step — wire up your cloud provider here"
-          echo "Options: Railway, Render, Fly.io, AWS ECS, GCP Cloud Run, etc."
-          # Example for Railway:
-          # railway up --service api-gateway
-          # railway up --service web
-          # railway up --service ai-service
+          missing=0
+          [ -z "${{ secrets.VERCEL_TOKEN }}" ] && echo "❌ Missing secret: VERCEL_TOKEN" && missing=1
+          [ -z "$VERCEL_ORG_ID" ] && echo "❌ Missing variable: VERCEL_ORG_ID" && missing=1
+          [ -z "$VERCEL_PROJECT_ID" ] && echo "❌ Missing variable: VERCEL_PROJECT_ID" && missing=1
+          [ -z "$NEXT_PUBLIC_API_URL" ] && echo "❌ Missing variable: NEXT_PUBLIC_API_URL" && missing=1
+          [ "$missing" -eq 0 ] || exit 1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Pull Vercel environment
+        working-directory: apps/web
+        run: npx vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Build for Vercel
+        working-directory: apps/web
+        env:
+          NEXT_PUBLIC_API_URL: ${{ vars.NEXT_PUBLIC_API_URL }}
+          NEXT_PUBLIC_APP_URL: ${{ vars.NEXT_PUBLIC_APP_URL }}
+        run: npx vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy to Vercel
+        working-directory: apps/web
+        run: npx vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+
+  # ─── Deploy AI Service → AWS Lambda (develop branch only) ────────────────────
+  deploy-ai-service:
+    name: Deploy ai-service → AWS Lambda
+    runs-on: ubuntu-latest
+    needs: [docker-build]
+    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
+    environment: staging
+
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION }}
+      AWS_ECR_REPOSITORY: ${{ vars.AWS_ECR_REPOSITORY }}
+      AWS_LAMBDA_FUNCTION_NAME: ${{ vars.AWS_LAMBDA_FUNCTION_NAME }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate AWS Lambda configuration
+        run: |
+          missing=0
+          [ -z "${{ secrets.AWS_ACCESS_KEY_ID }}" ] && echo "❌ Missing secret: AWS_ACCESS_KEY_ID" && missing=1
+          [ -z "${{ secrets.AWS_SECRET_ACCESS_KEY }}" ] && echo "❌ Missing secret: AWS_SECRET_ACCESS_KEY" && missing=1
+          [ -z "$AWS_REGION" ] && echo "❌ Missing variable: AWS_REGION" && missing=1
+          [ -z "$AWS_ECR_REPOSITORY" ] && echo "❌ Missing variable: AWS_ECR_REPOSITORY" && missing=1
+          [ -z "$AWS_LAMBDA_FUNCTION_NAME" ] && echo "❌ Missing variable: AWS_LAMBDA_FUNCTION_NAME" && missing=1
+          [ "$missing" -eq 0 ] || exit 1
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: ecr-login
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build, tag, and push Lambda container image
+        working-directory: services/ai-service
+        env:
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          IMAGE_URI="${AWS_ECR_REPOSITORY}:${IMAGE_TAG}"
+          IMAGE_LATEST="${AWS_ECR_REPOSITORY}:latest"
+          echo "🐳 Building Lambda container image..."
+          docker build -f Dockerfile.lambda -t "$IMAGE_URI" -t "$IMAGE_LATEST" .
+          docker push "$IMAGE_URI"
+          docker push "$IMAGE_LATEST"
+          echo "IMAGE_URI=${IMAGE_URI}" >> "$GITHUB_ENV"
+
+      - name: Update Lambda function code
+        run: |
+          echo "🚀 Updating Lambda function: ${AWS_LAMBDA_FUNCTION_NAME}"
+          aws lambda update-function-code \
+            --function-name "${AWS_LAMBDA_FUNCTION_NAME}" \
+            --image-uri "${IMAGE_URI}" \
+            --publish
+          aws lambda wait function-updated \
+            --function-name "${AWS_LAMBDA_FUNCTION_NAME}"
+          echo "✅ Lambda deployed with image ${IMAGE_URI}"
+
+      - name: Update Lambda environment variables
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          QDRANT_URL: ${{ vars.QDRANT_URL }}
+          QDRANT_API_KEY: ${{ secrets.QDRANT_API_KEY }}
+          REDIS_URL: ${{ secrets.REDIS_URL }}
+        run: |
+          jq -n \
+            --arg openai "$OPENAI_API_KEY" \
+            --arg qdrant_url "$QDRANT_URL" \
+            --arg qdrant_key "$QDRANT_API_KEY" \
+            --arg redis "$REDIS_URL" \
+            '{Variables: {OPENAI_API_KEY: $openai, QDRANT_URL: $qdrant_url, QDRANT_API_KEY: $qdrant_key, REDIS_URL: $redis}}' \
+            > env.json
+          aws lambda update-function-configuration \
+            --function-name "${AWS_LAMBDA_FUNCTION_NAME}" \
+            --environment file://env.json
+          echo "✅ Lambda environment variables updated"

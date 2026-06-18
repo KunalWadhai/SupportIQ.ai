@@ -50,8 +50,11 @@ export function startIngestionWorker() {
         data: { status: "PROCESSING" },
       });
 
-      // Generate a fresh pre-signed URL for the AI service
-      const fileUrl = await getPresignedUrl(storageKey, 3600);
+      // URL sources store the raw URL in storageKey; file uploads use MinIO keys
+      const fileUrl =
+        documentType.toUpperCase() === "URL"
+          ? storageKey
+          : await getPresignedUrl(storageKey, 3600);
 
       // Call AI service to chunk + embed + store in Qdrant
       const result = await ingestDocument({

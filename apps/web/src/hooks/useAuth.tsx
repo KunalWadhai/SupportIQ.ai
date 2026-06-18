@@ -48,6 +48,17 @@ interface AuthContextValue extends AuthState {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+const TOKEN_COOKIE = "supportiq_token";
+const TOKEN_MAX_AGE = 7 * 24 * 60 * 60; // 7 days, matches JWT expiry
+
+function setTokenCookie(token: string) {
+  document.cookie = `${TOKEN_COOKIE}=${encodeURIComponent(token)}; path=/; max-age=${TOKEN_MAX_AGE}; SameSite=Lax`;
+}
+
+function clearTokenCookie() {
+  document.cookie = `${TOKEN_COOKIE}=; path=/; max-age=0`;
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AuthState>({
     user: null,
@@ -58,12 +69,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   });
 
   const setAuth = (token: string, user: AuthUser, org: AuthOrg) => {
-    localStorage.setItem("supportiq_token", token);
+    localStorage.setItem(TOKEN_COOKIE, token);
+    setTokenCookie(token);
     setState({ user, org, token, isLoading: false, isAuthenticated: true });
   };
 
   const clearAuth = () => {
-    localStorage.removeItem("supportiq_token");
+    localStorage.removeItem(TOKEN_COOKIE);
+    clearTokenCookie();
     setState({ user: null, org: null, token: null, isLoading: false, isAuthenticated: false });
   };
 
@@ -83,7 +96,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    const token = localStorage.getItem("supportiq_token");
+    const token = localStorage.getItem(TOKEN_COOKIE);
     if (token) {
       refreshUser();
     } else {
