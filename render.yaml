@@ -15,7 +15,7 @@ services:
     plan: starter
     branch: develop
     buildCommand: >-
-      npm ci &&
+      npm ci --include=dev &&
       npx prisma generate --schema=apps/api-gateway/prisma/schema.prisma &&
       npm run build --workspace=apps/api-gateway
     startCommand: >-
