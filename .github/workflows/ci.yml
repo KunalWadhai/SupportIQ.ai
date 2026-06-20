@@ -302,18 +302,15 @@ jobs:
         run: npm ci
 
       - name: Pull Vercel environment
-        working-directory: apps/web
         run: npx vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Build for Vercel
-        working-directory: apps/web
         env:
           NEXT_PUBLIC_API_URL: ${{ vars.NEXT_PUBLIC_API_URL }}
           NEXT_PUBLIC_APP_URL: ${{ vars.NEXT_PUBLIC_APP_URL }}
         run: npx vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Deploy to Vercel
-        working-directory: apps/web
         run: npx vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
 
   # ─── Deploy AI Service → AWS Lambda (develop branch only) ────────────────────
