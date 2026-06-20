@@ -2,7 +2,6 @@ import logging
 import tempfile
 import os
 import requests
-from pathlib import Path
 
 from langchain_core.documents import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
