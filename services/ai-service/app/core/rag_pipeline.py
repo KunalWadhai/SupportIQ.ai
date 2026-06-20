@@ -3,9 +3,7 @@ import json
 from typing import AsyncIterator
 
 from langchain_openai import ChatOpenAI
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
-from langchain_core.output_parsers import StrOutputParser
 
 from app.config import get_settings
 from app.core.vector_store import search_documents

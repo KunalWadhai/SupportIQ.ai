@@ -42,7 +42,7 @@ router.post("/widget", requireWidgetKey, async (req, res) => {
     }
 
     // Build conversation history for context
-    const history = conversation.messages.map((m) => ({
+    const history = conversation.messages.map((m: { role: string; content: string }) => ({
       role: m.role.toLowerCase(),
       content: m.content,
     }));

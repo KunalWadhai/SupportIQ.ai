@@ -54,7 +54,7 @@ router.get("/overview", async (req, res) => {
 
     // Simple keyword frequency for top questions
     const questionFreq: Record<string, number> = {};
-    firstMessages.forEach((m) => {
+    firstMessages.forEach((m: { content: string }) => {
       const key = m.content.slice(0, 80).toLowerCase().trim();
       questionFreq[key] = (questionFreq[key] || 0) + 1;
     });
@@ -75,7 +75,7 @@ router.get("/overview", async (req, res) => {
         aiResolutionRate: total > 0 ? Math.round((resolved / total) * 100) : 0,
         escalationRate: total > 0 ? Math.round((escalated / total) * 100) : 0,
         avgConfidence: avgConfidenceResult._avg.confidence ?? 0,
-        conversationsByDay: conversationsByDay.map((r) => ({
+        conversationsByDay: conversationsByDay.map((r: { date: string; count: bigint }) => ({
           date: r.date,
           count: Number(r.count),
         })),
