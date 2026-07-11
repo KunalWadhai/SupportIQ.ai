@@ -1,7 +1,7 @@
 const API_URL =
   typeof window === "undefined"
-    ? process.env.API_INTERNAL_URL || "http://localhost:3001"
-    : process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+    ? process.env.API_INTERNAL_URL || "http://localhost:2026"
+    : process.env.NEXT_PUBLIC_API_URL || "http://localhost:2026";
 
 function getToken(): string | null {
   if (typeof window === "undefined") return null;

@@ -15,7 +15,7 @@ export interface IngestResult {
   collectionName: string;
 }
 
-// ─── RAG Query (non-streaming) ─────────────────────────────────────────────────
+// RAG Query (non-streaming)
 export async function queryRAG(params: {
   orgId: string;
   question: string;
@@ -24,7 +24,11 @@ export async function queryRAG(params: {
   const res = await fetch(`${AI_URL}/query`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(params),
+    body: JSON.stringify({
+      org_id: params.orgId,
+      question: params.question,
+      conversation_history: params.conversationHistory ?? [],
+    }),
   });
 
   if (!res.ok) {
@@ -45,7 +49,11 @@ export async function queryRAGStream(params: {
   const res = await fetch(`${AI_URL}/query/stream`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(params),
+    body: JSON.stringify({
+      org_id: params.orgId,
+      question: params.question,
+      conversation_history: params.conversationHistory ?? [],
+    }),
   });
 
   if (!res.ok) {
@@ -55,7 +63,6 @@ export async function queryRAGStream(params: {
   return res;
 }
 
-// ─── Document Ingestion ────────────────────────────────────────────────────────
 export async function ingestDocument(params: {
   orgId: string;
   documentId: string;
@@ -66,7 +73,13 @@ export async function ingestDocument(params: {
   const res = await fetch(`${AI_URL}/ingest`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(params),
+    body: JSON.stringify({
+      org_id: params.orgId,
+      document_id: params.documentId,
+      file_url: params.fileUrl,
+      document_type: params.documentType,
+      document_name: params.documentName,
+    }),
   });
 
   if (!res.ok) {
@@ -77,7 +90,6 @@ export async function ingestDocument(params: {
   return (await res.json()) as IngestResult;
 }
 
-// ─── Delete document vectors ───────────────────────────────────────────────────
 export async function deleteDocumentVectors(params: {
   orgId: string;
   documentId: string;
@@ -85,7 +97,10 @@ export async function deleteDocumentVectors(params: {
   const res = await fetch(`${AI_URL}/ingest/delete`, {
     method: "DELETE",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(params),
+    body: JSON.stringify({
+      org_id: params.orgId,
+      document_id: params.documentId,
+    }),
   });
 
   if (!res.ok) {
@@ -93,7 +108,6 @@ export async function deleteDocumentVectors(params: {
   }
 }
 
-// ─── Health check ─────────────────────────────────────────────────────────────
 export async function checkAIServiceHealth(): Promise<boolean> {
   try {
     const res = await fetch(`${AI_URL}/health`, { signal: AbortSignal.timeout(3000) });
