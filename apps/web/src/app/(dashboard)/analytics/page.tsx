@@ -21,13 +21,21 @@ export default function AnalyticsPage() {
 
   useEffect(() => {
     setLoading(true);
-    analyticsApi.overview(period).then(setData).finally(() => setLoading(false));
+    analyticsApi.overview(period).then(setData).catch(console.error).finally(() => setLoading(false));
   }, [period]);
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
         <Loader2 className="w-6 h-6 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!data) {
+    return (
+      <div className="flex items-center justify-center h-64 text-muted-foreground">
+        Failed to load analytics data. Please try again.
       </div>
     );
   }

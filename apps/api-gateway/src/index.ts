@@ -20,16 +20,13 @@ import widgetRouter from "./routes/widget.routes";
 
 const app = express();
 
-// ─── Security & Logging ───────────────────────────────────────────────────────
 app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
 app.use(morgan(config.nodeEnv === "production" ? "combined" : "dev"));
 
-// ─── CORS ─────────────────────────────────────────────────────────────────────
 // Widget endpoint needs open CORS so customer websites can call it
 app.use("/api/chat/widget", cors({ origin: "*" }));
 app.use("/api/widget", cors({ origin: "*" }));
 
-// Dashboard endpoints are restricted
 app.use(
   cors({
     origin: config.cors.origin,
@@ -37,11 +34,9 @@ app.use(
   })
 );
 
-// ─── Body Parsing ─────────────────────────────────────────────────────────────
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
-// ─── Rate Limiting ────────────────────────────────────────────────────────────
 const limiter = rateLimit({
   windowMs: config.rateLimit.windowMs,
   max: config.rateLimit.max,
@@ -50,7 +45,6 @@ const limiter = rateLimit({
   message: { success: false, error: "Too many requests" },
 });
 
-// Widget chat gets a tighter limit per IP
 const widgetLimiter = rateLimit({
   windowMs: 60_000,
   max: 30,
@@ -60,27 +54,22 @@ const widgetLimiter = rateLimit({
 app.use(limiter);
 app.use("/api/chat/widget", widgetLimiter);
 
-// ─── Routes ───────────────────────────────────────────────────────────────────
 app.use("/api/auth", authRouter);
 app.use("/api/knowledge", knowledgeRouter);
 app.use("/api/chat", chatRouter);
 app.use("/api/analytics", analyticsRouter);
 app.use("/api/widget", widgetRouter);
 
-// ─── Health ───────────────────────────────────────────────────────────────────
 app.get("/health", (_, res) => {
   res.json({ status: "ok", version: "1.0.0", timestamp: new Date().toISOString() });
 });
 
-// ─── 404 ──────────────────────────────────────────────────────────────────────
 app.use((req, res) => {
   res.status(404).json({ success: false, error: `Route ${req.path} not found` });
 });
 
-// ─── Global error handler ─────────────────────────────────────────────────────
 app.use(globalErrorHandler);
 
-// ─── Bootstrap ────────────────────────────────────────────────────────────────
 async function bootstrap() {
   try {
     await prisma.$connect();
@@ -103,7 +92,6 @@ async function bootstrap() {
 
 bootstrap();
 
-// ─── Graceful shutdown ────────────────────────────────────────────────────────
 process.on("SIGTERM", async () => {
   console.log("SIGTERM received — shutting down");
   await prisma.$disconnect();

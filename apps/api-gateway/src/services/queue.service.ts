@@ -9,7 +9,6 @@ const connection = new IORedis(config.redis.url, {
   maxRetriesPerRequest: null,
 });
 
-// ─── Queue ─────────────────────────────────────────────────────────────────────
 export const ingestionQueue = new Queue(config.queues.ingestion, {
   connection,
   defaultJobOptions: {
@@ -27,15 +26,14 @@ export interface IngestionJobData {
   documentType: string;
   documentName: string;
 }
-
+// queue
 export async function enqueueIngestion(data: IngestionJobData): Promise<string> {
   const job = await ingestionQueue.add("ingest", data, {
     jobId: `ingest-${data.documentId}`,
   });
   return job.id!;
 }
-
-// ─── Worker ────────────────────────────────────────────────────────────────────
+// worker
 export function startIngestionWorker() {
   const worker = new Worker<IngestionJobData>(
     config.queues.ingestion,
@@ -44,7 +42,6 @@ export function startIngestionWorker() {
 
       console.log(`🔄 Processing document ${documentId} for org ${orgId}`);
 
-      // Mark as processing
       await prisma.knowledgeDocument.update({
         where: { id: documentId },
         data: { status: "PROCESSING" },
@@ -65,7 +62,6 @@ export function startIngestionWorker() {
         documentName,
       });
 
-      // Mark as ready
       await prisma.knowledgeDocument.update({
         where: { id: documentId },
         data: {

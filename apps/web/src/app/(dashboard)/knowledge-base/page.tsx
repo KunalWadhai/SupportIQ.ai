@@ -30,25 +30,35 @@ export default function KnowledgeBasePage() {
   const [deleting, setDeleting] = useState<string | null>(null);
 
   const fetchDocs = useCallback(async () => {
-    const [docsData, statsData] = await Promise.all([
-      knowledgeApi.list(),
-      analyticsApi.knowledge(),
-    ]);
-    setDocs(docsData);
-    setKnowledgeStats(statsData);
-    setLoading(false);
+    try {
+      const [docsData, statsData] = await Promise.all([
+        knowledgeApi.list(),
+        analyticsApi.knowledge(),
+      ]);
+      setDocs(docsData);
+      setKnowledgeStats(statsData);
+    } catch (err) {
+      console.error("Failed to fetch docs:", err);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => {
     fetchDocs();
-    // Poll every 5s while anything is processing
+    // Poll every 5s while anything is processing.
+    // Read current docs via functional updater so `docs` is NOT a dependency.
+    // Having `docs` in deps caused the interval to reset on every fetch → infinite loop.
     const interval = setInterval(() => {
-      if (docs.some((d) => d.status === "PROCESSING" || d.status === "PENDING")) {
-        fetchDocs();
-      }
+      setDocs((currentDocs) => {
+        if (currentDocs.some((d) => d.status === "PROCESSING" || d.status === "PENDING")) {
+          fetchDocs();
+        }
+        return currentDocs;
+      });
     }, 5000);
     return () => clearInterval(interval);
-  }, [fetchDocs, docs]);
+  }, [fetchDocs]); // fetchDocs is stable (useCallback with no deps)
 
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this document and all its vectors?")) return;
@@ -56,8 +66,13 @@ export default function KnowledgeBasePage() {
     try {
       await knowledgeApi.deleteDocument(id);
       setDocs((prev) => prev.filter((d) => d.id !== id));
+      // Refresh stats so "Total documents" card updates
+      await fetchDocs();
+    } catch (err) {
+      console.error("Delete failed:", err);
     } finally {
       setDeleting(null);
+
     }
   };
 

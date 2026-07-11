@@ -64,8 +64,6 @@ export const config = {
   },
 
   cors: {
-    origin: process.env.ALLOWED_ORIGINS?.split(",") || [
-      "http://localhost:3000",
-    ],
+    origin: process.env.ALLOWED_ORIGINS || "*",
   },
 } as const;

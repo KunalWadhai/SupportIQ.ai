@@ -21,11 +21,11 @@ router.get("/overview", async (req, res) => {
 
     // Conversations by day (last N days)
     const conversationsByDay = await prisma.$queryRaw<Array<{ date: string; count: bigint }>>`
-      SELECT DATE(created_at)::text as date, COUNT(*)::bigint as count
+      SELECT DATE("createdAt")::text as date, COUNT(*)::bigint as count
       FROM conversations
-      WHERE org_id = ${orgId}
-        AND created_at >= ${since}
-      GROUP BY DATE(created_at)
+      WHERE "orgId" = ${orgId}
+        AND "createdAt" >= ${since}
+      GROUP BY DATE("createdAt")
       ORDER BY date ASC
     `;
 
