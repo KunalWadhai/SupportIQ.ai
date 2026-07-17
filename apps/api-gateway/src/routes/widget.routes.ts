@@ -4,7 +4,6 @@ import { prisma } from "../lib/prisma";
 
 const router = Router();
 
-// Public: return widget config by orgId (no auth needed — config is public)
 router.get("/:orgId/config", async (req, res) => {
   try {
     const org = await prisma.organisation.findUnique({
@@ -22,7 +21,6 @@ router.get("/:orgId/config", async (req, res) => {
   }
 });
 
-// Admin: update widget settings (JWT auth via dashboard)
 import { requireAuth } from "../middleware/auth";
 
 const WidgetSettingsSchema = z.object({
@@ -50,7 +48,6 @@ router.patch("/settings", requireAuth, async (req, res) => {
   }
 });
 
-// Admin: regenerate API key
 router.post("/regenerate-key", requireAuth, async (req, res) => {
   try {
     const { v4: uuidv4 } = await import("uuid");

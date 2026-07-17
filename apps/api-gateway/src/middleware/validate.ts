@@ -3,13 +3,6 @@ import { z, type ZodSchema } from "zod";
 
 type RequestPart = "body" | "query" | "params";
 
-/**
- * Express middleware factory that validates a request part against a Zod schema.
- * Attaches the parsed (typed) result back onto the request object.
- *
- * Usage:
- *   router.post("/", validate("body", MySchema), handler)
- */
 export function validate<T extends ZodSchema>(
   part: RequestPart,
   schema: T
@@ -26,13 +19,11 @@ export function validate<T extends ZodSchema>(
       });
     }
 
-    // Replace the raw input with the parsed/coerced value
     (req as any)[part] = result.data;
     next();
   };
 }
 
-// ─── Common reusable schemas ───────────────────────────────────────────────────
 export const PaginationSchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(20),

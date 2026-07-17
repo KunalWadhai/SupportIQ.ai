@@ -18,9 +18,7 @@ services:
       npm ci --include=dev &&
       npx prisma generate --schema=apps/api-gateway/prisma/schema.prisma &&
       npm run build --workspace=apps/api-gateway
-    startCommand: >-
-      npx prisma migrate deploy --schema=apps/api-gateway/prisma/schema.prisma &&
-      node apps/api-gateway/dist/index.js
+    startCommand: bash apps/api-gateway/scripts/start-render.sh
     healthCheckPath: /health
     envVars:
       - key: NODE_ENV
@@ -30,6 +28,8 @@ services:
       - key: PORT
         value: 3001
       - key: DATABASE_URL
+        sync: false
+      - key: DIRECT_DATABASE_URL
         sync: false
       - key: REDIS_URL
         sync: false

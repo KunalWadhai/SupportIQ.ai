@@ -26,14 +26,14 @@ export interface IngestionJobData {
   documentType: string;
   documentName: string;
 }
-// queue
+
 export async function enqueueIngestion(data: IngestionJobData): Promise<string> {
   const job = await ingestionQueue.add("ingest", data, {
     jobId: `ingest-${data.documentId}`,
   });
   return job.id!;
 }
-// worker
+
 export function startIngestionWorker() {
   const worker = new Worker<IngestionJobData>(
     config.queues.ingestion,
@@ -47,13 +47,11 @@ export function startIngestionWorker() {
         data: { status: "PROCESSING" },
       });
 
-      // URL sources store the raw URL in storageKey; file uploads use MinIO keys
       const fileUrl =
         documentType.toUpperCase() === "URL"
           ? storageKey
           : await getPresignedUrl(storageKey, 3600);
 
-      // Call AI service to chunk + embed + store in Qdrant
       const result = await ingestDocument({
         orgId,
         documentId,

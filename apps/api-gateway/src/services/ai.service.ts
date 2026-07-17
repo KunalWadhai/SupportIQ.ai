@@ -15,7 +15,6 @@ export interface IngestResult {
   collectionName: string;
 }
 
-// RAG Query (non-streaming)
 export async function queryRAG(params: {
   orgId: string;
   question: string;
@@ -39,8 +38,7 @@ export async function queryRAG(params: {
   return (await res.json()) as RAGQueryResult;
 }
 
-// ─── Streaming RAG Query ───────────────────────────────────────────────────────
-// Returns the raw ReadableStream from the AI service so Express can pipe it
+
 export async function queryRAGStream(params: {
   orgId: string;
   question: string;
