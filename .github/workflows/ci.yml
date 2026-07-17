@@ -10,33 +10,11 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-# ─── Shared config from GitHub Actions Variables (Settings → Secrets and variables → Actions → Variables)
-# Non-secret values — set these in your repository or environment:
-#   CI_POSTGRES_USER, CI_POSTGRES_DB, CI_REDIS_URL
-#   NEXT_PUBLIC_API_URL, NEXT_PUBLIC_APP_URL, AI_SERVICE_URL, API_INTERNAL_URL
-#   QDRANT_URL, MINIO_ENDPOINT, MINIO_PORT, MINIO_USE_SSL, MINIO_BUCKET
-#   NEXTAUTH_URL, ALLOWED_ORIGINS, NODE_ENV, AWS_REGION, AWS_S3_BUCKET
-#   RATE_LIMIT_WINDOW_MS, RATE_LIMIT_MAX
-#
-# ─── Secrets (Settings → Secrets and variables → Actions → Secrets):
-#   OPENAI_API_KEY, JWT_SECRET, NEXTAUTH_SECRET
-#   DATABASE_URL, REDIS_URL, QDRANT_API_KEY
-#   MINIO_ACCESS_KEY, MINIO_SECRET_KEY
-#   RENDER_DEPLOY_HOOK_URL, VERCEL_TOKEN
-#   AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY
-#   CI_POSTGRES_PASSWORD, CODECOV_TOKEN
-#
-# ─── Deploy Variables:
-#   VERCEL_ORG_ID, VERCEL_PROJECT_ID
-#   AWS_ECR_REPOSITORY, AWS_LAMBDA_FUNCTION_NAME
-
 env:
-  # CI ephemeral service credentials (override via repo Variables / Secrets)
   CI_POSTGRES_USER: ${{ vars.CI_POSTGRES_USER }}
   CI_POSTGRES_DB: ${{ vars.CI_POSTGRES_DB }}
   CI_REDIS_URL: ${{ vars.CI_REDIS_URL }}
 
-  # Application URLs (Variables)
   NEXT_PUBLIC_API_URL: ${{ vars.NEXT_PUBLIC_API_URL }}
   NEXT_PUBLIC_APP_URL: ${{ vars.NEXT_PUBLIC_APP_URL }}
   AI_SERVICE_URL: ${{ vars.AI_SERVICE_URL }}
@@ -44,13 +22,11 @@ env:
   NEXTAUTH_URL: ${{ vars.NEXTAUTH_URL }}
   QDRANT_URL: ${{ vars.QDRANT_URL }}
 
-  # Storage (Variables + Secrets)
   MINIO_ENDPOINT: ${{ vars.MINIO_ENDPOINT }}
   MINIO_PORT: ${{ vars.MINIO_PORT }}
   MINIO_USE_SSL: ${{ vars.MINIO_USE_SSL }}
   MINIO_BUCKET: ${{ vars.MINIO_BUCKET }}
 
-  # App config (Variables)
   NODE_ENV: ${{ vars.NODE_ENV }}
   ALLOWED_ORIGINS: ${{ vars.ALLOWED_ORIGINS }}
   RATE_LIMIT_WINDOW_MS: ${{ vars.RATE_LIMIT_WINDOW_MS }}
@@ -59,7 +35,7 @@ env:
   AWS_S3_BUCKET: ${{ vars.AWS_S3_BUCKET }}
 
 jobs:
-  # ─── Node.js lint + type-check + test ──────────────────────────────────────
+  # Node.js lint + type-check + test 
   node-ci:
     name: Node.js (lint · types · test)
     runs-on: ubuntu-latest
@@ -240,7 +216,7 @@ jobs:
             NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL }}
             NEXT_PUBLIC_APP_URL=${{ vars.NEXT_PUBLIC_APP_URL }}
 
-  # ─── Deploy API Gateway → Render (develop branch only) ───────────────────────
+  # Deploy API Gateway → Render
   deploy-api-gateway:
     name: Deploy api-gateway → Render
     runs-on: ubuntu-latest
@@ -264,7 +240,7 @@ jobs:
             "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
           echo "✅ Render deploy triggered — check Render Dashboard for build logs"
 
-  # ─── Deploy Web → Vercel (develop branch only) ─────────────────────────────
+  # Deploy Web → Vercel
   deploy-web:
     name: Deploy web → Vercel
     runs-on: ubuntu-latest
@@ -313,7 +289,7 @@ jobs:
       - name: Deploy to Vercel
         run: npx vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
 
-  # ─── Deploy AI Service → AWS Lambda (develop branch only) ────────────────────
+  # Deploy AI Service → AWS Lambda
   deploy-ai-service:
     name: Deploy ai-service → AWS Lambda
     runs-on: ubuntu-latest
