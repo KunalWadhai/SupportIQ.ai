@@ -36,14 +36,13 @@ export class ValidationError extends AppError {
   }
 }
 
-// ─── Global error handler — must have 4 params for Express to treat as error handler ───
 export const globalErrorHandler: ErrorRequestHandler = (
   err: Error,
   _req: Request,
   res: Response,
   _next: NextFunction
 ) => {
-  // Known application errors
+
   if (err instanceof AppError) {
     return res.status(err.statusCode).json({
       success: false,
@@ -52,7 +51,6 @@ export const globalErrorHandler: ErrorRequestHandler = (
     });
   }
 
-  // Prisma known error codes
   if ((err as any).code === "P2002") {
     return res.status(409).json({
       success: false,
@@ -69,7 +67,6 @@ export const globalErrorHandler: ErrorRequestHandler = (
     });
   }
 
-  // Unknown / unexpected errors
   console.error("[Unhandled Error]", err);
   return res.status(500).json({
     success: false,
@@ -81,7 +78,6 @@ export const globalErrorHandler: ErrorRequestHandler = (
   });
 };
 
-// ─── Async handler wrapper — removes try/catch boilerplate ─────────────────────
 export function asyncHandler(
   fn: (req: Request, res: Response, next: NextFunction) => Promise<any>
 ) {

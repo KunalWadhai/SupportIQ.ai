@@ -40,7 +40,6 @@ export async function requireAuth(
   }
 }
 
-// Widget requests authenticate via API key (public-facing chat endpoint)
 export async function requireWidgetKey(
   req: Request,
   res: Response,

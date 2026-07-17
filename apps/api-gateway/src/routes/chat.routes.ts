@@ -14,14 +14,12 @@ const ChatSchema = z.object({
   visitorEmail: z.string().email().optional(),
 });
 
-// ─── Widget Chat (public, API-key auth) ───────────────────────────────────────
-// Streams SSE back to the embeddable widget
+
 router.post("/widget", requireWidgetKey, async (req, res) => {
   try {
     const body = ChatSchema.parse(req.body);
     const orgId = req.orgId!;
 
-    // Find or create conversation
     let conversation = body.conversationId
       ? await prisma.conversation.findFirst({
           where: { id: body.conversationId, orgId },
@@ -41,13 +39,11 @@ router.post("/widget", requireWidgetKey, async (req, res) => {
       });
     }
 
-    // Build conversation history for context
     const history = conversation.messages.map((m: { role: string; content: string }) => ({
       role: m.role.toLowerCase(),
       content: m.content,
     }));
 
-    // Save user message
     const userMsg = await prisma.message.create({
       data: {
         conversationId: conversation.id,
@@ -56,14 +52,12 @@ router.post("/widget", requireWidgetKey, async (req, res) => {
       },
     });
 
-    // Set SSE headers
     res.setHeader("Content-Type", "text/event-stream");
     res.setHeader("Cache-Control", "no-cache");
     res.setHeader("Connection", "keep-alive");
     res.setHeader("X-Conversation-Id", conversation.id);
     res.flushHeaders();
 
-    // Send conversation ID immediately so client can store it
     res.write(`data: ${JSON.stringify({ type: "meta", conversationId: conversation.id, messageId: userMsg.id })}\n\n`);
 
     let fullContent = "";
@@ -72,7 +66,6 @@ router.post("/widget", requireWidgetKey, async (req, res) => {
     let shouldEscalate = false;
 
     try {
-      // Call Python AI service streaming endpoint
       const aiRes = await queryRAGStream({
         orgId,
         question: body.message,
@@ -120,7 +113,6 @@ router.post("/widget", requireWidgetKey, async (req, res) => {
       res.write(`data: ${JSON.stringify({ type: "token", content: fullContent })}\n\n`);
     }
 
-    // Save assistant message
     const assistantMsg = await prisma.message.create({
       data: {
         conversationId: conversation.id,
@@ -131,7 +123,6 @@ router.post("/widget", requireWidgetKey, async (req, res) => {
       },
     });
 
-    // Handle escalation
     if (shouldEscalate || confidence < 0.4) {
       await prisma.conversation.update({
         where: { id: conversation.id },
@@ -153,7 +144,6 @@ router.post("/widget", requireWidgetKey, async (req, res) => {
   }
 });
 
-// ─── Dashboard Chat Test (JWT auth) ───────────────────────────────────────────
 router.post("/test", requireAuth, async (req, res) => {
   try {
     const { message } = z.object({ message: z.string().min(1) }).parse(req.body);
@@ -172,7 +162,6 @@ router.post("/test", requireAuth, async (req, res) => {
   }
 });
 
-// ─── Get conversations (dashboard) ────────────────────────────────────────────
 router.get("/conversations", requireAuth, async (req, res) => {
   try {
     const page = parseInt(req.query.page as string) || 1;
@@ -209,7 +198,6 @@ router.get("/conversations", requireAuth, async (req, res) => {
   }
 });
 
-// ─── Get single conversation with all messages ─────────────────────────────────
 router.get("/conversations/:id", requireAuth, async (req, res) => {
   try {
     const conversation = await prisma.conversation.findFirst({
@@ -227,7 +215,6 @@ router.get("/conversations/:id", requireAuth, async (req, res) => {
   }
 });
 
-// ─── Resolve conversation ─────────────────────────────────────────────────────
 router.patch("/conversations/:id/resolve", requireAuth, async (req, res) => {
   try {
     const conv = await prisma.conversation.updateMany({

@@ -20,7 +20,6 @@ const upload = multer({
   },
 });
 
-// ─── List documents ────────────────────────────────────────────────────────────
 router.get("/", async (req, res) => {
   try {
     const docs = await prisma.knowledgeDocument.findMany({
@@ -38,7 +37,6 @@ router.get("/", async (req, res) => {
   }
 });
 
-// ─── Upload file ───────────────────────────────────────────────────────────────
 router.post("/upload", upload.single("file"), async (req, res) => {
   try {
     if (!req.file) {
@@ -56,7 +54,6 @@ router.post("/upload", upload.single("file"), async (req, res) => {
 
     const docType = mimeToType[mimetype] || "TXT";
 
-    // 1. Upload to MinIO
     const { storageKey } = await uploadFile({
       orgId: req.orgId!,
       fileName: originalname,
@@ -64,7 +61,6 @@ router.post("/upload", upload.single("file"), async (req, res) => {
       mimeType: mimetype,
     });
 
-    // 2. Create DB record
     const doc = await prisma.knowledgeDocument.create({
       data: {
         orgId: req.orgId!,
@@ -76,7 +72,6 @@ router.post("/upload", upload.single("file"), async (req, res) => {
       },
     });
 
-    // 3. Enqueue background ingestion job
     await enqueueIngestion({
       orgId: req.orgId!,
       documentId: doc.id,
@@ -92,7 +87,6 @@ router.post("/upload", upload.single("file"), async (req, res) => {
   }
 });
 
-// ─── Add URL source ────────────────────────────────────────────────────────────
 const UrlSchema = z.object({ url: z.string().url(), name: z.string().optional() });
 
 router.post("/url", async (req, res) => {
@@ -109,7 +103,6 @@ router.post("/url", async (req, res) => {
       },
     });
 
-    // Enqueue ingestion — AI service will crawl the URL
     await enqueueIngestion({
       orgId: req.orgId!,
       documentId: doc.id,
@@ -127,7 +120,6 @@ router.post("/url", async (req, res) => {
   }
 });
 
-// ─── Delete document ───────────────────────────────────────────────────────────
 router.delete("/:id", async (req, res) => {
   try {
     const doc = await prisma.knowledgeDocument.findFirst({
@@ -136,7 +128,6 @@ router.delete("/:id", async (req, res) => {
 
     if (!doc) return res.status(404).json({ success: false, error: "Document not found" });
 
-    // Delete vectors from Qdrant
     await deleteDocumentVectors({ orgId: req.orgId!, documentId: doc.id }).catch(console.error);
 
     // Delete file from MinIO (if applicable)
@@ -152,7 +143,6 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
-// ─── Get ingestion status ─────────────────────────────────────────────────────
 router.get("/:id/status", async (req, res) => {
   try {
     const doc = await prisma.knowledgeDocument.findFirst({

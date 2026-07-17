@@ -11,7 +11,6 @@ import { GetObjectCommand } from "@aws-sdk/client-s3";
 import { config } from "../config";
 import { v4 as uuidv4 } from "uuid";
 
-// ─── MinIO client (development) ───────────────────────────────────────────────
 const minioClient = new Minio.Client({
   endPoint: config.minio.endpoint,
   port: config.minio.port,
@@ -22,7 +21,6 @@ const minioClient = new Minio.Client({
 
 const MINIO_BUCKET = config.minio.bucket;
 
-// ─── AWS S3 client (production) ───────────────────────────────────────────────
 function createS3Client(): S3Client {
   return new S3Client({
     region: config.s3.region,
@@ -44,7 +42,6 @@ function useS3(): boolean {
   return config.storage.provider === "s3";
 }
 
-// ─── Init ─────────────────────────────────────────────────────────────────────
 export async function initStorage() {
   if (useS3()) {
     const client = getS3Client();
@@ -76,7 +73,6 @@ export async function initStorage() {
   }
 }
 
-// ─── Upload ───────────────────────────────────────────────────────────────────
 export async function uploadFile(params: {
   orgId: string;
   fileName: string;
@@ -112,7 +108,6 @@ export async function uploadFile(params: {
   return { storageKey, fileUrl };
 }
 
-// ─── Pre-signed read URL (for AI service ingestion) ───────────────────────────
 export async function getPresignedUrl(storageKey: string, expirySeconds = 3600): Promise<string> {
   if (useS3()) {
     const client = getS3Client();
@@ -125,7 +120,6 @@ export async function getPresignedUrl(storageKey: string, expirySeconds = 3600):
   return minioClient.presignedGetObject(MINIO_BUCKET, storageKey, expirySeconds);
 }
 
-// ─── Delete ───────────────────────────────────────────────────────────────────
 export async function deleteFile(storageKey: string): Promise<void> {
   if (useS3()) {
     await getS3Client().send(

@@ -10,7 +10,7 @@ function resolveJwtSecret(): string {
 function resolveStorageProvider(): "minio" | "s3" {
   const explicit = process.env.STORAGE_PROVIDER?.toLowerCase();
   if (explicit === "s3" || explicit === "minio") return explicit;
-  // Auto: production → S3 when bucket is configured, otherwise MinIO
+
   if (process.env.NODE_ENV === "production" && process.env.AWS_S3_BUCKET) {
     return "s3";
   }
