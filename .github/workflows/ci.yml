@@ -68,11 +68,12 @@ jobs:
           --health-retries 5
 
     env:
-      DATABASE_URL: postgresql://supportiq:test_password@localhost:5432/supportiq_test
-      REDIS_URL: redis://localhost:6379
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      DIRECT_DATABASE_URL: ${{ secrets.DIRECT_DATABASE_URL }}
+      REDIS_URL: ${{ secrets.REDIS_URL }}
       JWT_SECRET: ${{ secrets.JWT_SECRET }}
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-      AI_SERVICE_URL: http://localhost:8000
+      AI_SERVICE_URL: ${{ vars.AI_SERVICE_URL }}
       STORAGE_PROVIDER: minio
       MINIO_ENDPOINT: localhost
       MINIO_PORT: "9000"
@@ -80,8 +81,8 @@ jobs:
       MINIO_ACCESS_KEY: test
       MINIO_SECRET_KEY: testtest
       MINIO_BUCKET: supportiq-test
-      QDRANT_URL: http://localhost:6333
-      QDRANT_API_KEY: test-key
+      QDRANT_URL: ${{ secrets.QDRANT_URL }}
+      QDRANT_API_KEY: ${{ secrets.QDRANT_API_KEY }}
       NODE_ENV: test
 
     steps:
