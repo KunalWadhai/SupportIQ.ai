@@ -12,11 +12,7 @@ import { initStorage } from "./services/storage.service";
 import { startIngestionWorker } from "./services/queue.service";
 import { globalErrorHandler } from "./middleware/error";
 
-import authRouter from "./routes/auth.routes";
-import knowledgeRouter from "./routes/knowledge.routes";
-import chatRouter from "./routes/chat.routes";
-import analyticsRouter from "./routes/analytics.routes";
-import widgetRouter from "./routes/widget.routes";
+import router from "./routes/index";
 
 const app = express();
 
@@ -54,11 +50,7 @@ const widgetLimiter = rateLimit({
 app.use(limiter);
 app.use("/api/chat/widget", widgetLimiter);
 
-app.use("/api/auth", authRouter);
-app.use("/api/knowledge", knowledgeRouter);
-app.use("/api/chat", chatRouter);
-app.use("/api/analytics", analyticsRouter);
-app.use("/api/widget", widgetRouter);
+app.use('/api/v1', router);
 
 app.get("/health", (_, res) => {
   res.json({ status: "ok", version: "1.0.0", timestamp: new Date().toISOString() });
