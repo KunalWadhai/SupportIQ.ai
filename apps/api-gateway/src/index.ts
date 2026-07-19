@@ -50,7 +50,7 @@ const widgetLimiter = rateLimit({
 app.use(limiter);
 app.use("/api/chat/widget", widgetLimiter);
 
-app.use('/api/v1', router);
+app.use('/api', router);
 
 app.get("/health", (_, res) => {
   res.json({ status: "ok", version: "1.0.0", timestamp: new Date().toISOString() });
