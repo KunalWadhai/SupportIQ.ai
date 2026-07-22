@@ -35,7 +35,7 @@ jest.mock("jsonwebtoken", () => ({
 }));
 
 // ── Import after mocks ──────────────────────────────────────────────────────
-import authRouter from "../routes/auth.routes";
+import authRouter from "../modules/auth/router";
 import { prisma } from "../lib/prisma";
 
 const app = express();

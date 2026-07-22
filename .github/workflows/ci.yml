@@ -83,7 +83,7 @@ jobs:
       MINIO_BUCKET: supportiq-test
       QDRANT_URL: ${{ secrets.QDRANT_URL }}
       QDRANT_API_KEY: ${{ secrets.QDRANT_API_KEY }}
-      NODE_ENV: test
+      NODE_ENV: ${{ vars.NODE_ENV }}
 
     steps:
       - name: Checkout
@@ -140,9 +140,9 @@ jobs:
 
     env:
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-      QDRANT_URL: ${{ vars.QDRANT_URL || secrets.QDRANT_URL || 'http://localhost:6333' }}
-      QDRANT_API_KEY: ${{ secrets.QDRANT_API_KEY || 'test-key' }}
-      REDIS_URL: redis://localhost:6379
+      QDRANT_URL: ${{ vars.QDRANT_URL || secrets.QDRANT_URL }}
+      QDRANT_API_KEY: ${{ secrets.QDRANT_API_KEY }}
+      REDIS_URL: ${{ secrets.REDIS_URL }}
 
     steps:
       - name: Checkout
