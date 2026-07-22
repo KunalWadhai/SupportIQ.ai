@@ -1,8 +1,11 @@
 import { Router } from "express";
 import * as controllerMethods from './controller';
 import { upload } from './utils'
+import { requireAuth } from "../../middleware/auth";
 
 const knowledgeRouter = Router();
+
+knowledgeRouter.use(requireAuth);
 
 knowledgeRouter
 .get(
