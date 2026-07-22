@@ -30,18 +30,28 @@ export default function KnowledgeBasePage() {
   const [deleting, setDeleting] = useState<string | null>(null);
 
   const fetchDocs = useCallback(async () => {
-    try {
-      const [docsData, statsData] = await Promise.all([
-        knowledgeApi.list(),
-        analyticsApi.knowledge(),
-      ]);
-      setDocs(docsData);
-      setKnowledgeStats(statsData);
-    } catch (err) {
-      console.error("Failed to fetch docs:", err);
-    } finally {
-      setLoading(false);
+    const [docsResult, statsResult] = await Promise.allSettled([
+      knowledgeApi.list(),
+      analyticsApi.knowledge(),
+    ]);
+
+    if (docsResult.status === "fulfilled") {
+      setDocs(docsResult.value);
+    } else {
+      console.error("Failed to fetch documents:", docsResult.reason);
     }
+
+    if (statsResult.status === "fulfilled") {
+      setKnowledgeStats(statsResult.value);
+    } else {
+      console.error("Failed to fetch knowledge stats:", statsResult.reason);
+    }
+
+    if (docsResult.status === "rejected") {
+      setDocs([]);
+    }
+
+    setLoading(false);
   }, []);
 
   useEffect(() => {

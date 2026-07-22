@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import {prisma} from "../../lib/prisma";
 
-export async function getAnalytics({req, res}: {req: Request, res: Response}){
+export async function getAnalytics(req: Request, res: Response) {
    try {
       const orgId = req.orgId!;
       const days = parseInt(req.query.days as string) || 30;
@@ -80,7 +80,7 @@ export async function getAnalytics({req, res}: {req: Request, res: Response}){
     }
 }
 
-export async function getKnowledgeAnalytics({req, res}: {req: Request, res: Response}){
+export async function getKnowledgeAnalytics(req: Request, res: Response) {
       try {
         const orgId = req.orgId!;
     
