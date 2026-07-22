@@ -37,7 +37,10 @@ export default function LoginPage() {
       } else {
         await register(form);
       }
-      router.push("/");
+
+      const from = new URLSearchParams(window.location.search).get("from");
+      const destination = from?.startsWith("/") && !from.startsWith("//") ? from : "/";
+      router.replace(destination);
     } catch (err: any) {
       setError(err.message);
     } finally {

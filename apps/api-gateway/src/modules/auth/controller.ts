@@ -50,7 +50,14 @@ export async function register(req: Request, res: Response){
           data: {
             token,
             user: { id: user.id, name: user.name, email: user.email, role: user.role },
-            org: { id: user.org.id, name: user.org.name, apiKey: user.org.apiKey },
+            org: {
+              id: user.org.id,
+              name: user.org.name,
+              apiKey: user.org.apiKey,
+              widgetColor: user.org.widgetColor,
+              widgetGreeting: user.org.widgetGreeting,
+              plan: user.org.plan,
+            },
           },
         });
       } catch (err) {
@@ -98,16 +105,26 @@ export async function login(req: Request, res: Response){
       }
 }
 
-export async function getMe(req: any, res: Response) {
+export async function getMe(req: Request, res: Response) {
   try {
     const user = await prisma.user.findUnique({
-      where: { id: req.userId! },
+      where: { id: req.auth!.userId },
       include: { org: true },
     });
     if (!user) return res.status(404).json({ success: false, error: "User not found" });
     return res.json({
       success: true,
-      data: { user: { id: user.id, name: user.name, email: user.email, role: user.role }, org: { id: user.org.id, name: user.org.name } },
+      data: {
+        user: { id: user.id, name: user.name, email: user.email, role: user.role },
+        org: {
+          id: user.org.id,
+          name: user.org.name,
+          apiKey: user.org.apiKey,
+          widgetColor: user.org.widgetColor,
+          widgetGreeting: user.org.widgetGreeting,
+          plan: user.org.plan,
+        },
+      },
     });
   } catch (err) {
     console.error(err);
